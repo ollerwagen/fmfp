@@ -24,6 +24,7 @@ evalPred p args
 data BExp = And BExp BExp | Or BExp BExp | Impl BExp BExp | Not BExp
             | Forall Identifier BExp | Exists Identifier BExp
             | Predicate Pred [AExp]
+            | Equal AExp AExp
 
 write :: [(Identifier, Value)] -> Identifier -> Value -> [(Identifier, Value)]
 write [] n v            = [(n, v)]
@@ -42,6 +43,7 @@ verify e = aux e []
     aux (Forall    x e) defs = foldr (&&) True $ map (aux e) [write defs x v | v <- universe]
     aux (Exists    x e) defs = foldr (||) False $ map (aux e) [write defs x v | v <- universe]
     aux (Predicate p a) defs = evalPred p $ map (evalArithmetic defs) a
+    aux (Equal     a b) defs = evalArithmetic defs a == evalArithmetic defs b
 
 -- Exercise Sheet 2
 
@@ -80,3 +82,16 @@ verify e = aux e []
     fa1 = Forall 'y' (Impl (Predicate r [Id 'x', Id 'y']) (Predicate q [Id 'y']))
     formula = Forall 'x' $ Impl ex1 fa1
 --}
+
+-- Task 2.c)
+{--
+    rT :: (Int, [Value] -> Bool)
+    rT = (2, (\x -> if elem x [['a','a'], ['b','b'], ['c','c']] then True else False))
+
+    rF :: (Int, [Value] -> Bool)
+    rF = (2, (\x -> if elem x [['a','b'], ['b', 'a']] then True else False))
+
+    r = rF
+
+    formula = Forall 'x' (Forall 'y' (Impl (Predicate r [Id 'x', Id 'y']) (Impl (Predicate r [Id 'y', Id 'x']) (Equal (Id 'x') (Id 'y')))))
+--}    
